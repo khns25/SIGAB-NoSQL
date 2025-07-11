@@ -59,7 +59,6 @@
     </div>
 
     <div class="row" id="relawanList">
-      <!-- Data relawan akan ditampilkan di sini -->
     </div>
   </div>
 
@@ -128,7 +127,7 @@
   if (res.ok) {
     alert("Data relawan berhasil disimpan ke database");
     form.reset();
-    fetchRelawan(); // <-- Tambahkan ini agar data terbaru langsung tampil
+    fetchRelawan(); 
   } else {
     alert("Gagal menyimpan data");
   }
