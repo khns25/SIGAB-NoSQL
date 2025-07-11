@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard SIGAB - Data Relawan</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .card {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+    .status-aktif {
+      color: green;
+      font-weight: bold;
+    }
+    .status-non {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-success mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1">SIGAB - Sistem Informasi Relawan Bencana</span>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-md-8">
+        <h4>Tambah Data Relawan</h4>
+        <form id="relawanForm">
+          <div class="mb-2">
+            <input type="text" class="form-control" placeholder="Nama" name="nama" required>
+          </div>
+          <div class="mb-2">
+            <input type="text" class="form-control" placeholder="Keahlian (pisahkan dengan koma)" name="keahlian">
+          </div>
+          <div class="mb-2">
+            <input type="text" class="form-control" placeholder="Domisili" name="lokasi">
+          </div>
+          <div class="mb-2">
+            <select class="form-control" name="status">
+              <option value="aktif">Aktif</option>
+              <option value="non-aktif">Non-aktif</option>
+            </select>
+          </div>
+          <div class="mb-2">
+            <input type="text" class="form-control" placeholder="Aktivitas Terakhir" name="aktivitas">
+          </div>
+          <button type="submit" class="btn btn-success">Simpan</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="row" id="relawanList">
+      <!-- Data relawan akan ditampilkan di sini -->
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('relawanForm');
+    const list = document.getElementById('relawanList');
+
+    async function fetchRelawan() {
+      const res = await fetch("http://localhost:5000/api/relawan");
+      const data = await res.json();
+      renderCards(data);
+    }
+
+    function renderCards(data) {
+      list.innerHTML = '';
+      data.forEach((r, i) => {
+        const card = document.createElement('div');
+        card.className = 'col-md-4 mb-3';
+        card.innerHTML = `
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">${r.nama}</h5>
+              <p><strong>Keahlian:</strong> ${Array.isArray(r.keahlian) ? r.keahlian.join(', ') : r.keahlian}</p>
+              <p><strong>Domisili:</strong> ${r.lokasi}</p>
+              <p><strong>Status:</strong> <span class="${r.status === 'aktif' ? 'status-aktif' : 'status-non'}">${r.status}</span></p>
+              <p><strong>Aktivitas:</strong> ${r.aktivitas}</p>
+              <button class="btn btn-danger btn-sm mt-2" onclick="hapusRelawan('${r.nama}')">Hapus</button>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    async function hapusRelawan(nama) {
+      if (confirm(`Yakin ingin menghapus relawan "${nama}"?`)) {
+        const res = await fetch(`http://localhost:5000/api/relawan/${encodeURIComponent(nama)}`, {
+          method: "DELETE"
+        });
+        if (res.ok) {
+          alert("Data relawan berhasil dihapus!");
+          fetchRelawan();
+        } else {
+          alert("Gagal menghapus data relawan.");
+        }
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const data = new FormData(form);
+  const newRelawan = {
+    nama: data.get('nama'),
+    keahlian: data.get('keahlian').split(',').map(k => k.trim()),
+    lokasi: data.get('lokasi'),
+    status: data.get('status'),
+    aktivitas: data.get('aktivitas')
+  };
+
+  const res = await fetch("http://localhost:5000/api/relawan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(newRelawan)
+  });
+
+  if (res.ok) {
+    alert("Data relawan berhasil disimpan ke database");
+    form.reset();
+    fetchRelawan(); // <-- Tambahkan ini agar data terbaru langsung tampil
+  } else {
+    alert("Gagal menyimpan data");
+  }
+});
+
+    fetchRelawan();
+  </script>
+</body>
+</html>
